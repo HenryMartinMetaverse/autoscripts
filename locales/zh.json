@@ -1,0 +1,36 @@
+{
+  "Hello": "你好",
+  "Offline": "掉线了，正在重新启动...",
+  "Running": "开始运行...",
+
+  "Waiting": "请等待，正在加载页面...",
+  "Init": "第一次设置，请手动登录钱包",
+  "Setup Success": "设置成功，关闭本程序，启动 index.exe 开始自动挖矿",
+
+  "Enter your wallet account:": "请输入您的钱包地址:",
+  "Invalid wallet account %s": "错误的钱包地址 %s",
+
+  "Mine": "✅开始挖矿...",
+  "Mine Success": "✅挖矿成功...",
+
+  "Repair": "✅开始修复...",
+  "Repair Success": "✅修复成功...",
+
+  "Claim": "✅开始会员卡加速...",
+  "Claim Success": "✅加速成功...",
+
+  "Energy Check": "检查体力...",
+  "Energy": "✅需要补充体力 %s 点...",
+  "Energy Success": "✅成功补充体力...",
+
+  "Login Page Load": "✅登录页加载成功...",
+  "Login Success": "✅登录成功...",
+
+  "Authorization Expired": "程序已过期，请加入Telegram群，免费获得授权码 https://t.me/farmersworldvip",
+  "Authorization": "恭喜，授权成功！",
+
+  "Enter your license:": "请输入授权码:",
+  "Invalid license %s": "错误的授权码 %s",
+
+  "Check": "✅检查是否需要挖矿和修复... \r"
+}

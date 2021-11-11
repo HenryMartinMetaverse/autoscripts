@@ -1,0 +1,33 @@
+{
+  "Hello": "Hello",
+  "Offline": "Offline. restart the process...",
+  "Running": "Running...",
+
+  "Waiting": "Waiting...",
+  "Init": "First time, please login the wallet manually",
+  "Setup Success":"Setup success, close the program and start index.exe",
+
+  "Enter your wallet account:": "Enter your wallet account:",
+  "Invalid wallet account %s": "Invalid wallet account %s",
+
+  "Mine": "✅Mine...",
+  "Mine Success": "✅Mine success...",
+  "Repair": "✅Repair...",
+  "Repair Success": "✅Repair success...",
+  "Claim": "✅Claim...",
+  "Claim Success": "✅Claim success...",
+
+  "Energy Check": "Energy check...",
+  "Energy": "✅Need to replenish %s energy...",
+  "Energy Success": "✅Energy success...",
+
+  "Login Page Load": "✅The login page is loaded...",
+  "Login Success": "✅Login success...",
+  "Authorization Expired": "Expired，join telegram group，GET FREE CODE https://t.me/farmersworldvip",
+  "Authorization": "Authorization success",
+
+  "Check": "✅Check for mining and repair... ",
+
+  "Enter your license:": "Enter your license:",
+  "Invalid license %s": "Invalid license %s"
+}
