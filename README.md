@@ -8,10 +8,12 @@
 
 ## Introduce
 
-Automatic play script in [farmersworld](https://play.farmersworld.io/), Automatic mining and repair, automatic replenishment of energy. automatic earn.
+Automatic play script in [farmersworld](https://play.farmersworld.io/), Automatic mining and repair, automatic replenishment of energy. automatic earn. 
 
 Based on background technology development, high operation efficiency, stable and not crash, a single server can run more than 50 accounts. Automatically restarts when the line is offline. 15%-20% more revenue than front-end scripts, QuickMacro, AutoHotkey
-, etc
+, etc.
+
+Cross-platform, support Windows, Linux, MacOS.
 
 :spider_web: <https://play.farmersworld.io/>  
 :octocat: <https://github.com/HenryMartinMetaverse/autoscripts>  
