@@ -33,6 +33,12 @@ Cross-platform, support Windows, Linux, MacOS.
 4. run index, Start automatically play and earn
 
 
+
+
+[demo video](https://user-images.githubusercontent.com/93913343/141678839-23389abb-5d86-421e-83e2-217e18aa5a5a.mp4)
+
+
+
 ## History
 
 ### master v0.2 (Nov 2021)
