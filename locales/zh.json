@@ -28,6 +28,7 @@
 
   "Authorization Expired": "程序已过期，请加入Telegram群，免费获得授权码 https://t.me/farmersworldvip",
   "Authorization": "恭喜，授权成功！",
+  "Expire time": "授权过期时间",
 
   "Enter your license:": "请输入授权码:",
   "Invalid license %s": "错误的授权码 %s",
