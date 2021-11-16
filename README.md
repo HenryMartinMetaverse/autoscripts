@@ -38,6 +38,11 @@ Cross-platform, support Windows, Linux, MacOS.
 [demo video](https://user-images.githubusercontent.com/93913343/141678839-23389abb-5d86-421e-83e2-217e18aa5a5a.mp4)
 
 
+## Support
+
+![Join Telegram Group](https://user-images.githubusercontent.com/93913343/142018715-9ced3d44-bf86-42bb-918f-ae70b1279c81.jpeg)
+
+<https://t.me/farmersworldvip>
 
 ## History
 
