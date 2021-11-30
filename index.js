@@ -1,12 +1,10 @@
 const i18n = require('i18n')
 const path = require('path')
 const axios = require('axios')
-const crypto = require('crypto')
 const prompts = require('prompts')
 const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 const { osLocale } = require('os-locale-s-fix')
-
 
 const s = (ss) =>
   new Promise((res, rej) => {
@@ -21,16 +19,36 @@ const s30 = () =>
     return setTimeout(res, 30 * 1000)
   })
 
-const maxenergy = 0 // You can set the to 150
-let isMint = false
-let encrypted =
-  'ulQCaH6RYxXsoTe2SsVOkrkMeSGWI4YWGAtbekEYF7nDWU84zlJlKQO3Q6Tsi9kjA7VLEjekZjs/o52LZ0RjRQ=='
+Date.prototype.format = function (fmt) {
+  var o = {
+    'M+': this.getMonth() + 1,
+    'd+': this.getDate(),
+    'h+': this.getHours(),
+    'm+': this.getMinutes(),
+    's+': this.getSeconds(),
+    'q+': Math.floor((this.getMonth() + 3) / 3),
+    S: this.getMilliseconds(),
+  }
+  if (/(y+)/.test(fmt)) {
+    fmt = fmt.replace(RegExp.$1, (this.getFullYear() + '').substr(4 - RegExp.$1.length))
+  }
+  for (var k in o) {
+    if (new RegExp('(' + k + ')').test(fmt)) {
+      fmt = fmt.replace(
+        RegExp.$1,
+        RegExp.$1.length == 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length)
+      )
+    }
+  }
+  return fmt
+}
 
-async function play(account = 'gagxi.wam', pos) {
+const maxenergy = 0 // You can set the to 150
+
+async function play(account = 'gagxi.wam', pos, module) {
   let browser = null
-  const position = pos * 100
+  const position = pos * 150
   try {
-    await checkLicense()
     puppeteer.use(StealthPlugin())
     const params = {
       headless: false,
@@ -41,22 +59,47 @@ async function play(account = 'gagxi.wam', pos) {
         '--no-sandbox',
         '--disable-infobars',
         '--disable-setuid-sandbox',
-        `--window-position=${position},${position}`,
+        `--window-position=${position * 2},${position}`,
         '--window-size=1300,900',
       ],
       ignoreHTTPSErrors: true,
       timeout: 90 * 1000,
       userDataDir: './tmp/' + account,
     }
-
+    if (process.pkg) {
+      if (process.platform === 'darwin') {
+        // for macos
+        const puppeteerexec = path.resolve(
+          path.dirname(process.execPath),
+          'Chromium.app/Contents/MacOS/Chromium'
+        )
+        params.executablePath = puppeteerexec
+        params.userDataDir = path.resolve(path.dirname(process.execPath), 'tmp', account)
+      } else if (
+        process.platform === 'win32' ||
+        process.env.OSTYPE === 'cygwin' ||
+        process.env.OSTYPE === 'msys'
+      ) {
+        // for win
+        const puppeteerexec = path.resolve(process.cwd(), 'chrome-win', 'chrome.exe')
+        params.executablePath = puppeteerexec
+        params.userDataDir = path.resolve(path.dirname(process.execPath), 'tmp', account)
+      } else {
+        // linux
+        const puppeteerexec = path.resolve(path.dirname(process.execPath), 'chrome-linux/chrome')
+        params.executablePath = puppeteerexec
+        params.userDataDir = path.resolve(path.dirname(process.execPath), 'tmp', account)
+      }
+    }
     browser = await puppeteer.launch(params)
+
     const page = await browser.newPage()
     await page.setDefaultTimeout(90 * 1000)
     await page.setViewport({ width: 1280, height: 768 })
     page.on('console', (consoleObj) => {
       if (consoleObj.text().indexOf('inner-') === 0) {
         const key = consoleObj.text().replace('inner-', '')
-        console.log(i18n.__(key), new Date())
+        console.log(i18n.__(key), new Date().format(' yyyy-MM-dd hh:mm:ss'))
       }
     })
 
@@ -64,7 +107,7 @@ async function play(account = 'gagxi.wam', pos) {
     await page.goto(loginURL, { waitUntil: 'networkidle0' })
 
     await page.waitForSelector('button.login-button')
-    console.log(i18n.__('Login Page Load'), new Date())
+    console.log(i18n.__('Login Page Load'), new Date().format(' yyyy-MM-dd hh:mm:ss'))
 
     await page.waitForTimeout(2000)
     await page.click('button.login-button')
@@ -72,13 +115,66 @@ async function play(account = 'gagxi.wam', pos) {
     await page.click('img[alt="wax-cloud-wallet"]')
 
     await page.waitForSelector('div.container__header--tilte')
-    console.log(i18n.__('Login Success'), new Date())
-    await page.waitForTimeout(10000)
+    console.log(i18n.__('Login Success'), new Date().format(' yyyy-MM-dd hh:mm:ss'))
+    await page.waitForTimeout(5000)
     await page.click('div.game-container')
     while (true) {
-      await checkLicense()
-      await repair(page, account)
-      await energy(page, account)
+      if (module.includes('1')) {
+        await selected(page, 'home-map')
+        if (await checkMing(page)) {
+          await click(page, account, 'Mine')
+          await click(page, account, 'Claim')
+          await click(page, account, 'Repair')
+
+          await energy(page, account)
+        } else {
+          process.stdout.write(
+            account + i18n.__('Not Mine') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
+          )
+        }
+      }
+      if (module.includes('2')) {
+        await selected(page, 'chicken-map')
+        if (await checkMapTitle(page)) {
+          await click(page, account, 'Feed', 3)
+          await energy(page, account)
+        } else {
+          await home(page)
+          process.stdout.write(
+            account + i18n.__('Not Chicken') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
+          )
+        }
+      }
+
+      if (module.includes('3')) {
+        await selected(page, 'crop-map')
+        if (await checkMapTitle(page)) {
+          await click(page, account, 'Water', 8)
+          await energy(page, account)
+        } else {
+          await home(page)
+          process.stdout.write(
+            account + i18n.__('Not Crop') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
+          )
+        }
+      }
+
+      if (module.includes('4')) {
+        await selected(page, 'cow-map')
+        if (await checkMapTitle(page)) {
+          await click(page, account, 'Feed', 2)
+          await energy(page, account)
+        } else {
+          await home(page)
+          process.stdout.write(
+            account + i18n.__('Not Cow') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
+          )
+        }
+      }
+      if (module.includes('5')) {
+        await build(page)
+        await energy(page, account)
+      }
       await s10()
     }
   } catch (err) {
@@ -88,87 +184,178 @@ async function play(account = 'gagxi.wam', pos) {
   }
 }
 
-async function checkLicense() {
-  const privateKey = `-----BEGIN PRIVATE KEY-----
-MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEA4vdQJILtEPcp+5YP
-z8UQbOmQNvt6TAZeWWqmAfBtHHlqGSJo4ZB2dJNqFYMk/eJwBXeFQGO6UQD955qw
-XFZsvQIDAQABAkAosFegxAwF/5l6LfPVtql0LQcapEjPelDNzO3H6TdWZCNYFcKo
-CLkyiU6hdZOEX79hRb17KvHhiwCki6WT3qqNAiEA/LTDINTlFQ0UeQAAAJkC/F+i
-bBSHo7u/KsGQ01KtvUcCIQDl7KkhW0a1uO63U4T+qAr4TKARrYoB9b3jSEjf8jr3
-2wIgCVPWu/h/uCYyckDovxzmulABW8HqO8XrSXW5lcNAfHMCID9517OSzHGs7ZKF
-J0lawTSNiv92Zoxl+Jd/xEa3TBpTAiAz5CXp/aKt6n5rW2pr2SJZvep0uhJIDx/O
-SvlFMOI1oQ==
------END PRIVATE KEY-----
-`
-  let last = 0
-  try {
-    const decrypted = crypto.privateDecrypt(privateKey, Buffer.from(encrypted, 'base64'))
-    last = Number.parseInt(decrypted)
-  } catch (error) {
-    // console.log(i18n.__('Authorization Expired'))
-  }
-
-  if (new Date().getTime() > last) {
-    console.log(i18n.__('Authorization Expired'))
-    const response = await prompts({
-      type: 'text',
-      name: 'license',
-      message: i18n.__('Enter your license:'),
-      validate: (value) => {
-        if (value.length == 88) {
-          return true
-        }
-        if (value.includes('==')) {
-          return true
-        }
-        return i18n.__('Invalid license %s', value)
-      },
-    })
-    encrypted = response.license
-    try {
-      const decrypted = crypto.privateDecrypt(privateKey, Buffer.from(encrypted, 'base64'))
-      const last = Number.parseInt(decrypted)
-      if (new Date().getTime() > last) {
-        throw new Error(i18n.__('Authorization Expired'))
-      } else {
-        console.log(i18n.__('Authorization'))
-      }
-    } catch (error) {
-      throw new Error(i18n.__('Authorization Expired'))
-    }
-  } else {
-    console.log(i18n.__('Expire time'), new Date(last))
-  }
+async function checkMing(page) {
+  let empty = await page.$('.empty-container')
+  return !empty
 }
+
+async function checkMapTitle(page) {
+  let title = await page.$('.modal-map-title')
+  return !title
+}
+
+async function checkCPU(page, title) {
+  try {
+    let checklist = [
+      page.waitForSelector('.modal-stake-header'),
+      page.waitForSelector('.modal__button-group>.button-section'),
+      // page.waitForSelector('.close-modal'),
+      page.waitForFunction(() => {
+        var msg = document.querySelector('div.flash-message-content')
+        if (msg) {
+          return msg.innerText.includes('successful')
+        }
+        return false
+      }),
+      page.waitForFunction(() => {
+        var msg = document.querySelector('div.flash-message-content')
+        if (msg) {
+          return msg.innerText.includes('Repairing')
+        }
+        return false
+      }),
+    ]
+
+    let champion = await Promise.race(checklist)
+    await s(2)
+    if (champion) {
+      if (champion.constructor.name === 'ElementHandle') {
+        const stake = await champion.evaluate((node) => node.getAttribute('class'))
+        if ('modal-stake-header' === stake) {
+          const close_modal = await page.waitForSelector('.close-modal')
+          await close_modal.click()
+        } else {
+          champion.click()
+        }
+      }
+      console.log(i18n.__(title), new Date().format(' yyyy-MM-dd hh:mm:ss'))
+      await page.click('div.game-container')
+    }
+  } catch (error) {}
+}
+
+async function selected(page, title) {
+  await page.$$eval('div.navbar-group--tilte', async (element) => {
+    for (const elem of element) {
+      if (elem.innerText.includes('Map')) {
+        await elem.click()
+        return true
+      }
+    }
+    return false
+  })
+  await s(1)
+  await page.$$eval(
+    '.map-container-bg',
+    async (element, title) => {
+      for (const elem of element) {
+        if (elem.style['background-image'].includes(title)) {
+          await elem.click()
+          return true
+        }
+      }
+      return false
+    },
+    title
+  )
+  await s(2)
+}
+
+async function home(page) {
+  let isClick3 = await page.$$eval('div.navbar-group--tilte', async (element) => {
+    for (const elem of element) {
+      if (elem.innerText.includes('Home')) {
+        await elem.click()
+        return true
+      }
+    }
+    return false
+  })
+  await page.waitForTimeout(1000)
+}
+
+async function build(page) {
+  let isClick = await page.$$eval('div.navbar-group--tilte', async (element) => {
+    for (const elem of element) {
+      if (elem.innerText.includes('Map')) {
+        await elem.click()
+        return true
+      }
+    }
+    return false
+  })
+  await s(2)
+  let isClick2 = await page.$$eval('div.plain-button', async (element) => {
+    for (const elem of element) {
+      if (elem.innerText.includes('Build')) {
+        console.log('inner-Build Plant')
+        await elem.click()
+        return true
+      }
+    }
+    return false
+  })
+  if (isClick2) {
+    isMint = true
+    await s(10)
+  }
+  await s(2)
+  let isClick3 = await page.$$eval('div.navbar-group--tilte', async (element) => {
+    for (const elem of element) {
+      if (elem.innerText.includes('Home')) {
+        await elem.click()
+        return true
+      }
+    }
+    return false
+  })
+  // console.log(isClick, isClick2, isClick3)
+}
+
 //
 async function energy(page, account = 'gagxi.wam') {
-  if (isMint) {
-    isMint = false
-    console.log(i18n.__('Energy Check'), new Date())
-    await page.click('div.game-container')
-    const data = {
-      json: true,
-      code: 'farmersworld',
-      scope: 'farmersworld',
-      table: 'accounts',
-      lower_bound: account,
-      upper_bound: account,
-      index_position: 1,
-      key_type: 'i64',
-      limit: '100',
-    }
-
+  // if (isMint) {
+  isMint = false
+  process.stdout.write(
+    account + i18n.__('Energy Check') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
+  )
+  await page.click('div.game-container')
+  const data = {
+    json: true,
+    code: 'farmersworld',
+    scope: 'farmersworld',
+    table: 'accounts',
+    lower_bound: account,
+    upper_bound: account,
+    index_position: 1,
+    key_type: 'i64',
+    limit: '100',
+  }
+  try {
     const res = await axios.post('https://api.wax.alohaeos.com/v1/chain/get_table_rows', data)
     if (res.status === 200) {
       const json = res.data
       let last = json['rows'][0]['max_energy'] - json['rows'][0]['energy']
+      let balances = json['rows'][0].balances
+      let FOOD = 0
+      for (const bal of balances) {
+        if (bal.includes('FOOD')) {
+          const temparr = bal.split(' ')
+          if (temparr && temparr.length > 0) {
+            FOOD = parseInt(temparr[0])
+          }
+        }
+      }
       if (maxenergy) {
         last = maxenergy - json['rows'][0]['energy']
       }
+      if (last > parseInt(FOOD * 5)) {
+        last = parseInt(FOOD * 5)
+      }
       if (last > 0) {
-        console.log(i18n.__('Energy', last), new Date())
+        console.log(i18n.__('Energy', last), new Date().format(' yyyy-MM-dd hh:mm:ss'))
         await page.click('img.resource-energy--plus[alt="plus"]')
-        await page.waitForTimeout(3000)
+        await page.waitForTimeout(2000)
         await page.type('input.modal-input', last + '')
         await page.waitForTimeout(2000)
 
@@ -182,90 +369,56 @@ async function energy(page, account = 'gagxi.wam') {
           return false
         })
         if (isClick) {
-          await page.waitForSelector('div.flash-message-content')
-          console.log(i18n.__('Mine Success'), new Date())
+          // let modal = await page.$('.modal-content')
+          await checkCPU(page, 'Energy Success')
+          // if (!(await checkCPU(page))) {
+          //   isMint = false
+          //   await page.waitForSelector('div.flash-message-content')
+          //   console.log(i18n.__('Energy Success'), new Date().format(" yyyy-MM-dd hh:mm:ss"))
+          // } else {
+          //   await page.click('div.game-container')
+          // }
+          await s(5)
         }
-        await s(5)
         await page.click('div.game-container')
       }
     }
+  } catch (error) {
+    isMint = true
   }
+  // }
 }
-
-// 
-async function repair(page) {
-  process.stdout.write(i18n.__('Check') + new Date() + '\r')
-  for (let index = 0; index < 24; index++) {
+async function click(page, account, title, count = 24) {
+  process.stdout.write(
+    account + i18n.__('Check') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
+  )
+  for (let index = 0; index < count; index++) {
     const tools = await page.$('img[alt="' + index + '"]')
     if (tools) {
       await page.click('img[alt="' + index + '"]')
-      await page.waitForTimeout(500)
-      let isClick = await page.$$eval('div.plain-button', (elements) => {
-        for (const ele of elements) {
-          if (ele.innerText.includes('Mine') && !ele.className.includes('disabled')) {
-            console.log('inner-Mine')
-            ele.click()
-            return true
+      await page.waitForTimeout(1500)
+      let isClick = await page.$$eval(
+        'div.plain-button',
+        (elements, title) => {
+          for (const ele of elements) {
+            if (ele.innerText.includes(title) && !ele.className.includes('disabled')) {
+              console.log('inner-' + title)
+              ele.click()
+              return true
+            }
           }
-        }
-        return false
-      })
+          return false
+        },
+        title
+      )
       if (isClick) {
-        await page.waitForSelector('div.flash-message-content')
-        console.log(i18n.__('Mine Success'), new Date())
-        isMint = true
-        await page.waitForTimeout(1000)
-        await page.click('div.game-container')
-      }
-    }
-  }
-
-  for (let index = 0; index < 24; index++) {
-    const tools = await page.$('img[alt="' + index + '"]')
-    if (tools) {
-      await page.click('img[alt="' + index + '"]')
-      await page.waitForTimeout(500)
-      let isClick = await page.$$eval('div.plain-button', (elements) => {
-        for (const ele of elements) {
-          if (ele.innerText.includes('Claim') && !ele.className.includes('disabled')) {
-            console.log('inner-Claim')
-            ele.click()
-            return true
-          }
-        }
-        return false
-      })
-      if (isClick) {
-        await page.waitForSelector('div.flash-message-content')
-        console.log(i18n.__('Claim Success'), new Date())
-        isMint = true
-        await page.waitForTimeout(1000)
-        await page.click('div.game-container')
-      }
-    }
-  }
-
-  // 
-  for (let index = 0; index < 24; index++) {
-    const tools = await page.$('img[alt="' + index + '"]')
-    if (tools) {
-      await page.click('img[alt="' + index + '"]')
-      await page.waitForTimeout(500)
-      let isClick = await page.$$eval('div.plain-button', (elements) => {
-        for (const ele of elements) {
-          if (ele.innerText.includes('Repair') && !ele.className.includes('disabled')) {
-            console.log('inner-Repair')
-            ele.click()
-            return true
-          }
-        }
-        return false
-      })
-      if (isClick) {
-        await page.waitForSelector('div.flash-message-content')
-        console.log(i18n.__('Repair Success'), new Date())
-        await page.waitForTimeout(1000)
-        await page.click('div.game-container')
+        // if (!(await checkCPU(page))) {
+        //   await page.waitForSelector('div.flash-message-content')
+        //   console.log(i18n.__(title + ' Success'), new Date().format(" yyyy-MM-dd hh:mm:ss"))
+        //   isMint = true
+        //   await page.waitForTimeout(3000)
+        // }
+        await checkCPU(page, title + ' Success')
       }
     }
   }
@@ -286,6 +439,7 @@ async function repair(page) {
     const args = process.argv.splice(2)
     let account = args[0] || ''
     const position = Number(args[1] || 0)
+    const module = args[2] || '12345'
 
     if (!account) {
       const response = await prompts({
@@ -309,10 +463,10 @@ async function repair(page) {
       try {
         if (account) {
           console.log(i18n.__('Waiting'))
-          await play(account, position)
+          await play(account, position, module)
         }
       } catch (error) {
-        console.log(i18n.__('Offline'), new Date())
+        console.log(i18n.__('Offline'), new Date().format(' yyyy-MM-dd hh:mm:ss'))
         await s30()
       }
     }
