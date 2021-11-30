@@ -8,7 +8,7 @@
 
 ## Introduce
 
-Automatic play script in [farmersworld](https://play.farmersworld.io/), Automatic mining and repair, automatic replenishment of energy. automatic earn. 
+Automatic play script in [farmersworld](https://play.farmersworld.io/), Automatic mining and repair, automatic energy addition. Support raising chickens, raising cattle and farming. automatic earn. 
 
 Based on background technology development, high operation efficiency, stable and not crash, a single server can run more than 50 accounts. Automatically restarts when the line is offline. 15%-20% more revenue than front-end scripts, QuickMacro, AutoHotkey
 , etc.
@@ -22,21 +22,53 @@ Cross-platform, support Windows, Linux, MacOS.
 
 ## Getting Started
 
-[![node](https://img.shields.io/node/v/wechaty.svg?maxAge=604800)](https://nodejs.org/)
 
-1. [Download](https://github.com/HenryMartinMetaverse/autoscripts/releases) software packages  
+### Windows System requirements
 
-2. Unpack the packages
+Before running, you need to download and install the software environment, because it is source code, so you need to develop the environment.
 
-3. run setup, the first setup requires an set account and login to the wallet
+1. Download and install Git https://git-scm.com/download/win
+2. Download and install NodeJS https://nodejs.org/en/
+3. Open CMD and select Run with administrator rights
+4. The environment required to install windows10 ```npm install --global --production windows-build-tools --verbose```
 
-4. run index, Start automatically play and earn
+### Run
 
+1. Download the source code ```git clone https://gitee.com/romejiang/autoscripts.git```
 
+2. Go to the directory and install the NPM package ``` cd autoscripts && npm i --verbose ```
 
+3. To run the setup script, ```node setup```, enter the wallet address for the first time and manually log in to the wallet
 
-[demo video](https://user-images.githubusercontent.com/93913343/141678839-23389abb-5d86-421e-83e2-217e18aa5a5a.mp4)
+4. ```node index```, Start automatically play and earn
+5. If you need to open more accounts, repeat steps 3 to 4 above.
 
+## FAQ
+
+1. run ```npm i``` If an error, run ``` npm i ``` again
+
+2. If the code is updated, execute the code
+```
+git fetch --all
+git reset --hard origin/main
+git pull
+
+```
+3. Advanced features: command line support to directly enter the wallet account, such as ```node index xxxxx.wam```
+
+4. Advanced function: in the case of multiple open, add a number at the end of the command line, so that the window can be staggered, such as: ```node index xxxxx.wam 1```
+5. Advanced features: Allows only partial modules to run. For example, just mining and cattle, enter 13
+``` node index xxxxx.wam 1 13```
+If you raise a chicken, enter 2
+``` node index xxxxx.wam 1 2```
+By default, all modules are enabled
+```
+1 = mined
+2 = chicken
+3 = farming 
+4 = cow
+5 = build (FARM PLOT/COOP/COWSHED)
+```
 
 ## Support
 
@@ -45,6 +77,10 @@ Cross-platform, support Windows, Linux, MacOS.
 <https://t.me/farmersworldvip>
 
 ## History
+
+### master v0.3 (Dec 2021)
+
+Release v0.3 Added raising chicken, raising cattle, farming module, Fixed some bugs.
 
 ### master v0.2 (Nov 2021)
 
