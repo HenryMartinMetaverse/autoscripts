@@ -48,6 +48,7 @@ const maxenergy = 0 // You can set the to 150
 async function play(account = 'gagxi.wam', pos, module) {
   let browser = null
   const position = pos * 150
+  const DefaultTimeout = 90 * 1000
   try {
     puppeteer.use(StealthPlugin())
     const params = {
@@ -63,7 +64,7 @@ async function play(account = 'gagxi.wam', pos, module) {
         '--window-size=1300,900',
       ],
       ignoreHTTPSErrors: true,
-      timeout: 90 * 1000,
+      timeout: DefaultTimeout,
       userDataDir: './tmp/' + account,
     }
     if (process.pkg) {
@@ -94,7 +95,7 @@ async function play(account = 'gagxi.wam', pos, module) {
     browser = await puppeteer.launch(params)
 
     const page = await browser.newPage()
-    await page.setDefaultTimeout(90 * 1000)
+    await page.setDefaultTimeout(DefaultTimeout)
     await page.setViewport({ width: 1280, height: 768 })
     page.on('console', (consoleObj) => {
       if (consoleObj.text().indexOf('inner-') === 0) {
@@ -137,6 +138,7 @@ async function play(account = 'gagxi.wam', pos, module) {
         await selected(page, 'chicken-map')
         if (await checkMapTitle(page)) {
           await click(page, account, 'Feed', 3)
+          await click(page, account, 'Hatch', 3)
           await energy(page, account)
         } else {
           await home(page)
@@ -195,43 +197,53 @@ async function checkMapTitle(page) {
 }
 
 async function checkCPU(page, title) {
-  try {
-    let checklist = [
-      page.waitForSelector('.modal-stake-header'),
-      page.waitForSelector('.modal__button-group>.button-section'),
-      // page.waitForSelector('.close-modal'),
-      page.waitForFunction(() => {
-        var msg = document.querySelector('div.flash-message-content')
-        if (msg) {
-          return msg.innerText.includes('successful')
-        }
-        return false
-      }),
-      page.waitForFunction(() => {
-        var msg = document.querySelector('div.flash-message-content')
-        if (msg) {
-          return msg.innerText.includes('Repairing')
-        }
-        return false
-      }),
-    ]
-
-    let champion = await Promise.race(checklist)
-    await s(2)
-    if (champion) {
-      if (champion.constructor.name === 'ElementHandle') {
-        const stake = await champion.evaluate((node) => node.getAttribute('class'))
-        if ('modal-stake-header' === stake) {
-          const close_modal = await page.waitForSelector('.close-modal')
-          await close_modal.click()
-        } else {
-          champion.click()
+  let checklist = [
+    page.waitForSelector('.modal-stake-header'),
+    page.waitForSelector('.modal__button-group>.button-section'),
+    // page.waitForSelector('.close-modal'),
+    page.waitForFunction(() => {
+      var msg = document.querySelector('div.flash-message-content')
+      if (msg) {
+        return msg.innerText.includes('successful')
+      }
+      return false
+    }),
+    page.waitForFunction(async () => {
+      var msg = document.querySelector('div.flash-message-content')
+      if (msg) {
+        if (msg.innerText.includes('Repairing')) {
+          await new Promise((resolve, reject) => setTimeout(resolve, 3000))
+          return true
         }
       }
-      console.log(i18n.__(title), new Date().format(' yyyy-MM-dd hh:mm:ss'))
-      await page.click('div.game-container')
+      return false
+    }),
+    page.waitForFunction(() => {
+      var msg = document.querySelector('div.flash-message-content')
+      if (msg) {
+        return msg.innerText.includes('Eating')
+      }
+      return false
+    }),
+  ]
+
+  let champion = await Promise.race(checklist)
+  await s(2)
+  if (champion) {
+    if (champion.constructor.name === 'ElementHandle') {
+      const stake = await champion.evaluate((node) => node.getAttribute('class'))
+      if ('modal-stake-header' === stake) {
+        const close_modal = await page.waitForSelector('.close-modal')
+        await close_modal.click()
+      } else {
+        champion.click()
+      }
+      // }else{
+      // await s(3)
     }
-  } catch (error) {}
+    console.log(i18n.__(title), new Date().format(' yyyy-MM-dd hh:mm:ss'))
+    await page.click('div.game-container')
+  }
 }
 
 async function selected(page, title) {
@@ -315,24 +327,29 @@ async function build(page) {
 //
 async function energy(page, account = 'gagxi.wam') {
   // if (isMint) {
-  isMint = false
-  process.stdout.write(
-    account + i18n.__('Energy Check') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
-  )
-  await page.click('div.game-container')
-  const data = {
-    json: true,
-    code: 'farmersworld',
-    scope: 'farmersworld',
-    table: 'accounts',
-    lower_bound: account,
-    upper_bound: account,
-    index_position: 1,
-    key_type: 'i64',
-    limit: '100',
-  }
   try {
-    const res = await axios.post('https://api.wax.alohaeos.com/v1/chain/get_table_rows', data)
+    isMint = false
+    process.stdout.write(
+      account + i18n.__('Energy Check') + new Date().format(' yyyy-MM-dd hh:mm:ss') + '\r'
+    )
+
+    const data = {
+      json: true,
+      code: 'farmersworld',
+      scope: 'farmersworld',
+      table: 'accounts',
+      lower_bound: account,
+      upper_bound: account,
+      index_position: 1,
+      key_type: 'i64',
+      limit: '100',
+    }
+
+    const res = await axios.post('https://wax.pink.gg/v1/chain/get_table_rows', data, {
+      timeout: 90 * 1000,
+    })
+    // const res = await axios.post('https://api.waxsweden.org/v1/chain/get_table_rows', data)
+    // const res = await axios.post('https://api.wax.alohaeos.com/v1/chain/get_table_rows', data)
     if (res.status === 200) {
       const json = res.data
       let last = json['rows'][0]['max_energy'] - json['rows'][0]['energy']
@@ -378,13 +395,13 @@ async function energy(page, account = 'gagxi.wam') {
           // } else {
           //   await page.click('div.game-container')
           // }
-          await s(5)
+          await s(2)
         }
         await page.click('div.game-container')
       }
     }
   } catch (error) {
-    isMint = true
+    console.log(error.toString())
   }
   // }
 }
@@ -397,28 +414,25 @@ async function click(page, account, title, count = 24) {
     if (tools) {
       await page.click('img[alt="' + index + '"]')
       await page.waitForTimeout(1500)
-      let isClick = await page.$$eval(
-        'div.plain-button',
-        (elements, title) => {
-          for (const ele of elements) {
-            if (ele.innerText.includes(title) && !ele.className.includes('disabled')) {
-              console.log('inner-' + title)
-              ele.click()
-              return true
+      var timeout = await page.$eval('div.card-container--time', (card) => card.innerText)
+      if (count > 9 || timeout == '00:00:00') {
+        let isClick = await page.$$eval(
+          'div.plain-button',
+          (elements, title) => {
+            for (const ele of elements) {
+              if (ele.innerText.includes(title) && !ele.className.includes('disabled')) {
+                console.log('inner-' + title)
+                ele.click()
+                return true
+              }
             }
-          }
-          return false
-        },
-        title
-      )
-      if (isClick) {
-        // if (!(await checkCPU(page))) {
-        //   await page.waitForSelector('div.flash-message-content')
-        //   console.log(i18n.__(title + ' Success'), new Date().format(" yyyy-MM-dd hh:mm:ss"))
-        //   isMint = true
-        //   await page.waitForTimeout(3000)
-        // }
-        await checkCPU(page, title + ' Success')
+            return false
+          },
+          title
+        )
+        if (isClick) {
+          await checkCPU(page, title + ' Success')
+        }
       }
     }
   }
