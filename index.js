@@ -486,5 +486,6 @@ async function click(page, account, title, count = 24) {
     }
   } catch (error) {
     console.log(error)
+    await s10()
   }
 })()
