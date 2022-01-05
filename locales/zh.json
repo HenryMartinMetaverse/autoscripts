@@ -26,12 +26,6 @@
   "Login Page Load": "✅登录页加载成功...",
   "Login Success": "✅登录成功...",
 
-  "Authorization Expired": "程序已过期，请加入Telegram群，免费获得授权码 https://t.me/farmersworldvip",
-  "Authorization": "恭喜，授权成功！",
-  "Expire time": "授权过期时间",
-
-  "Enter your license:": "请输入授权码:",
-  "Invalid license %s": "错误的授权码 %s",
   "Build Plant": "耕地",
 
   "Water": "浇水 ",
@@ -47,6 +41,8 @@
   "Not Cow": "🚫没有养牛",
 
   "Not Chicken": "🚫没有养鸡",
+
+  "Select":"请选择你要使用的模块，可以多选? /1=挖矿mined /2=养鸡chicken /3=种地farming /4=养牛cow /5=建造:",
 
   "Check": "✅检查是否需要挖矿和修复..."
 }

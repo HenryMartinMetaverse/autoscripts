@@ -18,11 +18,7 @@
 	"Energy Success": "✅Energy success...",
 	"Login Page Load": "✅The login page is loaded...",
 	"Login Success": "✅Login success...",
-	"Authorization Expired": "Expired，join telegram group，GET FREE CODE https://t.me/farmersworldvip",
-	"Authorization": "Authorization success",
-	"Expire time": "Expire time",
 	"Check": "✅Check for mining and repair... ",
-	"Enter your license:": "Enter your license:",
 	"Invalid license %s": "Invalid license %s",
 	"Water": "Water ",
 	"Water Check": "✅Water Check ",
@@ -34,5 +30,6 @@
 	"Not Chicken": "🚫Not Chicken",
 	"Not Mine": "🚫Not Mine ",
 	"Not Crop": "🚫Not Crop ",
+	"Select":"Please select the module you want to use? /1=Mined /2=raising chickens /3=farming /4=raising cows /5=building:",
 	"Not Cow": "🚫Not Cow "
 }
